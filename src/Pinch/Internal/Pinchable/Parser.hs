@@ -16,6 +16,7 @@ module Pinch.Internal.Pinchable.Parser
     ) where
 
 import Control.Applicative
+import qualified Control.Monad.Fail as Fail
 import Control.Monad
 
 -- | Failure continuation. Called with the failure message.
@@ -58,9 +59,6 @@ instance Alternative Parser where
             l' (\_ -> r' kFail kSucc) kSucc
 
 instance Monad Parser where
-    {-# INLINE fail #-}
-    fail msg = Parser $ \kFail _ -> kFail msg
-
     {-# INLINE return #-}
     return = pure
 
@@ -72,6 +70,13 @@ instance Monad Parser where
         Parser $ \kFail kSuccB ->
             a' kFail $ \a ->
             unParser (k a) kFail kSuccB
+
+    -- backwards compatibility
+    fail = Fail.fail
+
+instance Fail.MonadFail Parser where
+    {-# INLINE fail #-}
+    fail msg = Parser $ \kFail _ -> kFail msg
 
 instance MonadPlus Parser where
     {-# INLINE mzero #-}

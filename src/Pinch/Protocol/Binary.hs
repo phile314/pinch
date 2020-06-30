@@ -28,10 +28,12 @@ import Data.Monoid
 import qualified Data.ByteString     as B
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text.Encoding  as TE
+import Data.Serialize.IEEE754
 
 import Pinch.Internal.Builder (Builder)
 import Pinch.Internal.Message
-import Pinch.Internal.Parser  (Parser, runParser, runParser')
+--import Pinch.Internal.Get  (Get, runGet, runGet')
+import Data.Serialize.Get
 import Pinch.Internal.TType
 import Pinch.Internal.Value
 import Pinch.Protocol         (Protocol (..))
@@ -47,7 +49,7 @@ binaryProtocol = Protocol
     { serializeValue     = binarySerialize
     , deserializeValue'  = binaryDeserialize ttype
     , serializeMessage   = binarySerializeMessage
-    , deserializeMessage = binaryDeserializeMessage
+    , deserializeMessage' = binaryDeserializeMessage
     }
 
 ------------------------------------------------------------------------------
@@ -58,12 +60,9 @@ binarySerializeMessage msg =
     BB.int8 (messageCode (messageType msg)) <> BB.int32BE (messageId msg) <>
     binarySerialize (messagePayload msg)
 
-binaryDeserializeMessage :: ByteString -> Either String Message
-binaryDeserializeMessage = runParser binaryMessageParser
-
-binaryMessageParser :: Parser Message
-binaryMessageParser = do
-    size <- P.int32
+binaryDeserializeMessage :: Get Message
+binaryDeserializeMessage = do
+    size <- getInt32be
     if size < 0
         then parseStrict size
         else parseNonStrict size
@@ -74,10 +73,10 @@ binaryMessageParser = do
         unless (version == 1) $
             fail $ "Unsupported version: " ++ show version
         Message
-            <$> TE.decodeUtf8 <$> (P.int32 >>= P.take . fromIntegral)
+            <$> TE.decodeUtf8 <$> (getInt32be >>= getBytes . fromIntegral)
             <*> typ
-            <*> P.int32
-            <*> binaryParser ttype
+            <*> getInt32be
+            <*> binaryDeserialize ttype
       where
         version = (0x7fff0000 .&. versionAndType) `shiftR` 16
 
@@ -89,24 +88,21 @@ binaryMessageParser = do
     -- name~4 type:1 seqid:4 payload
     parseNonStrict nameLength =
         Message
-            <$> TE.decodeUtf8 <$> P.take (fromIntegral nameLength)
+            <$> TE.decodeUtf8 <$> getBytes (fromIntegral nameLength)
             <*> parseMessageType
-            <*> P.int32
-            <*> binaryParser ttype
+            <*> getInt32be
+            <*> binaryDeserialize ttype
 
 
-parseMessageType :: Parser MessageType
-parseMessageType = P.int8 >>= \code -> case fromMessageCode code of
+parseMessageType :: Get MessageType
+parseMessageType = getInt8 >>= \code -> case fromMessageCode code of
     Nothing -> fail $ "Unknown message type: " ++ show code
     Just t -> return t
 
 ------------------------------------------------------------------------------
 
-binaryDeserialize :: TType a -> ByteString -> Either String (ByteString, Value a)
-binaryDeserialize t = runParser' (binaryParser t)
-
-binaryParser :: TType a -> Parser (Value a)
-binaryParser typ = case typ of
+binaryDeserialize :: TType a -> Get (Value a)
+binaryDeserialize typ = case typ of
   TBool   -> parseBool
   TByte   -> parseByte
   TDouble -> parseDouble
@@ -119,81 +115,81 @@ binaryParser typ = case typ of
   TSet    -> parseSet
   TList   -> parseList
 
-getTType :: Int8 -> Parser SomeTType
+getTType :: Int8 -> Get SomeTType
 getTType code =
     maybe (fail $ "Unknown TType: " ++ show code) return $ fromTypeCode code
 
-parseTType :: Parser SomeTType
-parseTType = P.int8 >>= getTType
+parseTType :: Get SomeTType
+parseTType = getInt8 >>= getTType
 
-parseBool :: Parser (Value TBool)
-parseBool = VBool . (== 1) <$> P.int8
+parseBool :: Get (Value TBool)
+parseBool = VBool . (== 1) <$> getInt8
 
-parseByte :: Parser (Value TByte)
-parseByte = VByte <$> P.int8
+parseByte :: Get (Value TByte)
+parseByte = VByte <$> getInt8
 
-parseDouble :: Parser (Value TDouble)
-parseDouble = VDouble <$> P.double
+parseDouble :: Get (Value TDouble)
+parseDouble = VDouble <$> getFloat64be
 
-parseInt16 :: Parser (Value TInt16)
-parseInt16 = VInt16 <$> P.int16
+parseInt16 :: Get (Value TInt16)
+parseInt16 = VInt16 <$> getInt16be
 
-parseInt32 :: Parser (Value TInt32)
-parseInt32 = VInt32 <$> P.int32
+parseInt32 :: Get (Value TInt32)
+parseInt32 = VInt32 <$> getInt32be
 
-parseInt64 :: Parser (Value TInt64)
-parseInt64 = VInt64 <$> P.int64
+parseInt64 :: Get (Value TInt64)
+parseInt64 = VInt64 <$> getInt64be
 
-parseBinary :: Parser (Value TBinary)
-parseBinary = VBinary <$> (P.int32 >>= P.take . fromIntegral)
+parseBinary :: Get (Value TBinary)
+parseBinary = VBinary <$> (getInt32be >>= getBytes . fromIntegral)
 
 
-parseMap :: Parser (Value TMap)
+parseMap :: Get (Value TMap)
 parseMap = do
     ktype' <- parseTType
     vtype' <- parseTType
-    count <- P.int32
+    count <- getInt32be
 
     case (ktype', vtype') of
       (SomeTType ktype, SomeTType vtype) -> do
         items <- FL.replicateM (fromIntegral count) $
-            MapItem <$> binaryParser ktype
-                    <*> binaryParser vtype
+            MapItem <$> binaryDeserialize ktype
+                    <*> binaryDeserialize vtype
         return $ VMap items
 
 
-parseSet :: Parser (Value TSet)
+parseSet :: Get (Value TSet)
 parseSet = do
     vtype' <- parseTType
-    count <- P.int32
+    count <- getInt32be
 
     case vtype' of
       SomeTType vtype ->
-          VSet <$> FL.replicateM (fromIntegral count) (binaryParser vtype)
+          VSet <$> FL.replicateM (fromIntegral count) (binaryDeserialize vtype)
 
 
-parseList :: Parser (Value TList)
+parseList :: Get (Value TList)
 parseList = do
     vtype' <- parseTType
-    count <- P.int32
+    count <- getInt32be
 
     case vtype' of
       SomeTType vtype ->
-        VList <$> FL.replicateM (fromIntegral count) (binaryParser vtype)
+        VList <$> FL.replicateM (fromIntegral count) (binaryDeserialize vtype)
 
 
-parseStruct :: Parser (Value TStruct)
-parseStruct = P.int8 >>= loop M.empty
+parseStruct :: Get (Value TStruct)
+parseStruct = getInt8 >>= loop M.empty
   where
-    loop :: HashMap Int16 SomeValue -> Int8 -> Parser (Value TStruct)
+    loop :: HashMap Int16 SomeValue -> Int8 -> Get (Value TStruct)
     loop fields    0 = return $ VStruct fields
     loop fields code = do
         vtype' <- getTType code
-        fieldId <- P.int16
+        fieldId <- getInt16be
         case vtype' of
           SomeTType vtype -> do
-            value <- SomeValue <$> binaryParser vtype
-            loop (M.insert fieldId value fields) =<< P.int8
+            value <- SomeValue <$> binaryDeserialize vtype
+            loop (M.insert fieldId value fields) =<< getInt8
 
 
 ------------------------------------------------------------------------------

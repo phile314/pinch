@@ -145,13 +145,17 @@ module Pinch
     , TMap
     , TSet
     , TList
+
+    , ThriftResult (..)
     ) where
 
 import Control.Monad
 import Data.ByteString (ByteString)
 import Data.Int        (Int32)
 import Data.Text       (Text)
+import Data.Tuple      (swap)
 
+import Data.Serialize.Get
 import Pinch.Internal.Builder   (runBuilder)
 import Pinch.Internal.Generic
 import Pinch.Internal.Message
@@ -161,6 +165,7 @@ import Pinch.Internal.Value
 import Pinch.Protocol
 import Pinch.Protocol.Binary
 import Pinch.Protocol.Compact
+import Pinch.Client
 
 ------------------------------------------------------------------------------
 
@@ -217,7 +222,7 @@ decode p = deserializeValue p >=> runParser . unpinch
 -- Right ("\NUL\NUL\NUL",[1,2,3,4,5])
 --
 decodeWithLeftovers :: Pinchable a => Protocol -> ByteString -> Either String (ByteString, a)
-decodeWithLeftovers p = deserializeValue' p >=> traverse (runParser . unpinch)
+decodeWithLeftovers p bs = (swap <$> runGetState (deserializeValue' p) bs 0) >>= traverse (runParser . unpinch)
 {-# INLINE decodeWithLeftovers #-}
 
 ------------------------------------------------------------------------------
