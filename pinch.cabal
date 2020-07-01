@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bc4a7d4b015bc7ae417067ff3b7c4ce583293dffa8798c790b0fd7f354909fa5
+-- hash: 88341d378a067a6eec7e07a11fc519ba05d5b45cee5437648d525aa93fd582a1
 
 name:           pinch
 version:        0.3.4.1
@@ -49,6 +49,7 @@ library
   exposed-modules:
       Pinch
       Pinch.Internal.Builder
+      Pinch.Internal.Exception
       Pinch.Internal.FoldList
       Pinch.Internal.Generic
       Pinch.Internal.Message

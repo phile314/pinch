@@ -50,6 +50,7 @@ library:
   exposed-modules:
     - Pinch
     - Pinch.Internal.Builder
+    - Pinch.Internal.Exception
     - Pinch.Internal.FoldList
     - Pinch.Internal.Generic
     - Pinch.Internal.Message

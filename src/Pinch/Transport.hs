@@ -1,6 +1,10 @@
 {-# LANGUAGE RankNTypes #-}
 
-module Pinch.Transport where
+module Pinch.Transport
+  ( Transport(..)
+  , framedTransport
+  , unframedTransport
+  )where
 
 import qualified Data.Text as T
 import qualified Data.ByteString as BS

@@ -321,18 +321,3 @@ spec = describe "BinaryProtocol" $ do
           , 0x00
           ], Message "putAll" Reply 0 (vstruct []))
         ]
-    it "partial stuff" $ do
-        let msg = B.pack
-              [ 0x80, 0x01 -- version = 1
-              , 0x00, 0x02 -- type = REPLY
-              , 0x00, 0x00, 0x00, 0x06 -- length = 6
-              , 0x70, 0x75, 0x74, 0x41, 0x6c, 0x6c -- 'putAll'
-              , 0x00, 0x00, 0x00, 0x00 --seq id = 0
-              , 0x00
-              ]
-        let expected = Message "putAll" Reply 0 (vstruct [])
-        let actual = runGetPartial (deserializeMessage' binaryProtocol) msg
-        case actual of
-          Done x _ -> x `shouldBe` expected
-          Partial c -> error "Partial"
-          Fail err x -> error $ show err
