@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- |
 -- Module      :  Pinch.Internal.Message
 -- Copyright   :  (c) Abhinav Gupta 2015
@@ -15,7 +16,7 @@
 module Pinch.Internal.Message
     ( Message(..)
     , MessageType(..)
-    , EndpointName
+    , EndpointName(..)
     ) where
 
 import Prelude
@@ -25,12 +26,14 @@ import Data.Data       (Data)
 import Data.Int        (Int32)
 import Data.Text       (Text)
 import Data.Typeable   (Typeable)
+import Data.Hashable
 import GHC.Generics    (Generic)
 
 import Pinch.Internal.TType (TStruct)
 import Pinch.Internal.Value (Value)
 
-type EndpointName = Text
+newtype EndpointName = EndpointName Text
+  deriving (Typeable, Eq, Hashable)
 
 -- | Type of message being sent.
 data MessageType

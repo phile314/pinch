@@ -24,16 +24,16 @@ class Connection c where
   cGetSome :: c -> Int -> IO BS.ByteString
   cPut :: c -> BS.ByteString -> IO ()
 
+instance Connection Handle where
+  cPut = BS.hPut
+  cGet = BS.hGet
+  cGetSome = BS.hGetSome
+
 data Transport
   = Transport
   { writeMessage :: Builder -> IO ()
   , readMessage  :: forall a . Get a -> IO (Either String a)
   }
-
-instance Connection Handle where
-  cPut = BS.hPut
-  cGet = BS.hGet
-  cGetSome = BS.hGetSome
 
 framedTransport :: Connection c => c -> IO Transport
 framedTransport c = pure $ Transport writeMsg readMsg where

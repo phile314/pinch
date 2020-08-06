@@ -4,7 +4,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Pinch.Client
-  ( EndpointName
+  ( EndpointName(..)
   , Client
   , Multiplex(..)
   , ThriftCall(..)
@@ -85,4 +85,4 @@ instance ThriftResult Unit where
 mux :: Multiplex -> Message -> Message
 mux m msg = case m of
   Simplex -> msg
-  MultiplexTo srv -> msg { messageName = srv <> ":" <> messageName msg }
+  MultiplexTo (EndpointName srv) -> msg { messageName = srv <> ":" <> messageName msg }
