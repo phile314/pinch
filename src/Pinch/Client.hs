@@ -7,7 +7,7 @@ module Pinch.Client
   ( EndpointName
   , Client
   , Multiplex(..)
-  , ThriftCall
+  , ThriftCall(..)
   , ThriftError(..)
   , call
   , callOrThrow
