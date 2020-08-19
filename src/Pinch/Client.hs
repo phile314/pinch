@@ -12,7 +12,7 @@ module Pinch.Client
   , call
   , callOrThrow
   , simpleClient
-  , ThriftResult (..)
+  , ThriftResult(..)
   ) where
 
 import Control.Exception
@@ -33,7 +33,7 @@ data Client = Client
   , cMultiplex :: !Multiplex
   }
 
-data Multiplex = DontMultiplex | MultiplexAs !EndpointName
+data Multiplex = Simplex | MultiplexTo !EndpointName
 
 data ThriftCall a = ThriftCall
   { request :: !Message
@@ -82,5 +82,5 @@ instance ThriftResult () where
 
 mux :: Multiplex -> Message -> Message
 mux m msg = case m of
-  DontMultiplex -> msg
-  MultiplexAs srv -> msg { messageName = srv <> "." <> messageName msg }
+  Simplex -> msg
+  MultiplexTo srv -> msg { messageName = srv <> ":" <> messageName msg }
