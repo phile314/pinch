@@ -40,6 +40,7 @@ module Pinch.Internal.Pinchable
     , Parser
     , runParser
     , parserCatch
+    , Unit(..)
     ) where
 
 import Prelude
@@ -348,8 +349,11 @@ instance (Ord a, Pinchable a) => Pinchable (S.Set a) where
         <$> FL.mapM checkedUnpinch xs
     unpinch x = fail $ "Failed to read set. Got " ++ show x
 
-instance Pinchable () where
-    type Tag () = TStruct
-    pinch () = VStruct mempty
-    unpinch (VStruct xs) | HM.null xs = pure ()
-    unpinch x = fail $ "Failed to read unit. Got " ++ show x
+data Unit = Unit
+
+instance Pinchable Unit where
+    type Tag Unit = TStruct
+    pinch Unit = VStruct mempty
+    unpinch (VStruct xs) | HM.null xs = pure Unit
+    unpinch x = fail $ "Failed to read void success. Got " ++ show x
+

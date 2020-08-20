@@ -78,9 +78,9 @@ class (Pinchable a, Tag a ~ TStruct) => ThriftResult a where
   type ResultType a
   toEither :: a -> Either SomeException (ResultType a)
 
-instance ThriftResult () where
-  type ResultType () = ()
-  toEither _ = Right ()
+instance ThriftResult Unit where
+  type ResultType Unit = ()
+  toEither Unit = Right ()
 
 mux :: Multiplex -> Message -> Message
 mux m msg = case m of

@@ -147,6 +147,11 @@ module Pinch
     , TList
 
     , ThriftResult (..)
+
+    , Unit(..)
+
+    , ApplicationException (..)
+    , ExceptionType (..)
     ) where
 
 import Prelude
@@ -159,6 +164,7 @@ import Data.Tuple      (swap)
 
 import Data.Serialize.Get
 import Pinch.Internal.Builder   (runBuilder)
+import Pinch.Internal.Exception
 import Pinch.Internal.Generic
 import Pinch.Internal.Message
 import Pinch.Internal.Pinchable
