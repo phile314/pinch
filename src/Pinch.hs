@@ -149,6 +149,8 @@ module Pinch
     , ThriftResult (..)
     ) where
 
+import Prelude
+
 import Control.Monad
 import Data.ByteString (ByteString)
 import Data.Int        (Int32)

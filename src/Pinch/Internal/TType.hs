@@ -44,6 +44,8 @@ module Pinch.Internal.TType
     , TList
     ) where
 
+import Prelude
+
 import Data.Hashable (Hashable (..))
 import Data.Typeable ((:~:) (..), Typeable)
 

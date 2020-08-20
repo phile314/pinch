@@ -2,6 +2,8 @@
 {-# LANGUAGE TypeFamilies #-}
 module Pinch.Server where
 
+import Prelude
+
 import Pinch.Internal.Pinchable
 import Pinch.Internal.Message
 import Pinch.Internal.TType

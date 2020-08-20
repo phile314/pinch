@@ -18,6 +18,8 @@ module Pinch.Internal.Message
     , EndpointName
     ) where
 
+import Prelude
+
 import Control.DeepSeq (NFData)
 import Data.Data       (Data)
 import Data.Int        (Int32)

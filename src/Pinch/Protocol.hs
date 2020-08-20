@@ -17,6 +17,8 @@ module Pinch.Protocol
     , deserializeMessage
     ) where
 
+import Prelude
+
 import Data.ByteString (ByteString)
 
 import Pinch.Internal.Builder (Builder)

@@ -13,6 +13,7 @@
 -- Implements the Thrift Binary Protocol as a 'Protocol'.
 module Pinch.Protocol.Binary (binaryProtocol) where
 
+import Prelude
 
 #if __GLASGOW_HASKELL__ < 709
 import Control.Applicative

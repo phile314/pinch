@@ -28,6 +28,8 @@ module Pinch.Internal.Builder
     , getSize
     ) where
 
+import Prelude
+
 import Data.ByteString              (ByteString)
 import Data.ByteString.Builder.Prim ((>*<))
 import Data.Int

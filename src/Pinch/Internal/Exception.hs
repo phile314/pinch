@@ -1,6 +1,8 @@
 {-# LANGUAGE TypeApplications, TypeFamilies, ScopedTypeVariables #-}
 module Pinch.Internal.Exception where
 
+import Prelude
+
 import Data.Int
 import Data.Typeable
 import Pinch.Internal.Pinchable

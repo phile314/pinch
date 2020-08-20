@@ -6,6 +6,8 @@ module Pinch.Transport
   , unframedTransport
   )where
 
+import Prelude
+
 import qualified Data.Text as T
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS

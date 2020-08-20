@@ -15,6 +15,8 @@ module Pinch.Client
   , ThriftResult(..)
   ) where
 
+import Prelude
+
 import Control.Exception
 import Pinch.Internal.TType
 import Pinch.Internal.Exception

@@ -45,6 +45,7 @@ module Pinch.Internal.Generic
     , Void(..)
     ) where
 
+import Prelude
 
 #if __GLASGOW_HASKELL__ < 709
 import Data.Foldable    (Foldable)

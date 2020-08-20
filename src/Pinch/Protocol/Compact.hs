@@ -15,6 +15,7 @@
 -- Implements the Thrift Compact Protocol as a 'Protocol'.
 module Pinch.Protocol.Compact (compactProtocol) where
 
+import Prelude
 
 #if __GLASGOW_HASKELL__ < 709
 import Control.Applicative

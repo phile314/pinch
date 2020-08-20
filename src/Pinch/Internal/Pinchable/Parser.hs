@@ -15,6 +15,8 @@ module Pinch.Internal.Pinchable.Parser
     , parserCatch
     ) where
 
+import Prelude
+
 import Control.Applicative
 import qualified Control.Monad.Fail as Fail
 import Control.Monad
