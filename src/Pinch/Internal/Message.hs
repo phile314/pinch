@@ -15,7 +15,10 @@
 module Pinch.Internal.Message
     ( Message(..)
     , MessageType(..)
+    , EndpointName
     ) where
+
+import Prelude
 
 import Control.DeepSeq (NFData)
 import Data.Data       (Data)
@@ -26,6 +29,8 @@ import GHC.Generics    (Generic)
 
 import Pinch.Internal.TType (TStruct)
 import Pinch.Internal.Value (Value)
+
+type EndpointName = Text
 
 -- | Type of message being sent.
 data MessageType

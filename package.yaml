@@ -40,6 +40,7 @@ dependencies:
   - unordered-containers >= 0.2 && < 0.3
   - vector >= 0.10 && < 0.13
   - semigroups >= 0.18 && < 0.19
+  - cereal
 
 build-tools:
   - hspec-discover >= 2.1
@@ -49,6 +50,7 @@ library:
   exposed-modules:
     - Pinch
     - Pinch.Internal.Builder
+    - Pinch.Internal.Exception
     - Pinch.Internal.FoldList
     - Pinch.Internal.Generic
     - Pinch.Internal.Message
@@ -59,6 +61,8 @@ library:
     - Pinch.Protocol
     - Pinch.Protocol.Binary
     - Pinch.Protocol.Compact
+    - Pinch.Client
+    - Pinch.Transport
   dependencies:
     - array >= 0.5
     - deepseq >= 1.3 && < 1.5

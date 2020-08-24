@@ -20,7 +20,6 @@ import Pinch.Internal.Value   (SomeValue (..), Value (..))
 import Pinch.Protocol
 import Pinch.Protocol.Binary  (binaryProtocol)
 
-
 serialize :: IsTType a => Value a -> ByteString
 serialize = runBuilder . serializeValue binaryProtocol
 
@@ -82,7 +81,7 @@ tooShortCases = mapM_ . uncurry $ \(SomeTType t) v -> go t v
             Right v -> expectationFailure $
               "Expected " ++ show bytes ++ " to fail to parse. " ++
               "Got: " ++ show v
-            Left msg -> msg `shouldContain` "Input is too short"
+            Left msg -> msg `shouldContain` "too few bytes"
 
 
 spec :: Spec
@@ -274,15 +273,17 @@ spec = describe "BinaryProtocol" $ do
         ]
 
     it "can read and write messages" $ readWriteMessageCases
-        [ ([ 0x00, 0x00, 0x00, 0x06                 -- length = 6
-           , 0x67, 0x65, 0x74, 0x46, 0x6f, 0x6f     -- 'getFoo'
+        [ ([ 0x80, 0x01, 0x00
            , 0x01                                   -- type = Call
+           , 0x00, 0x00, 0x00, 0x06                 -- length = 6
+           , 0x67, 0x65, 0x74, 0x46, 0x6f, 0x6f     -- 'getFoo'
            , 0x00, 0x00, 0x00, 0x2a                 -- seqId = 42
            , 0x00                                   -- empty struct
            ], Message "getFoo" Call 42 (vstruct [])),
-          ([ 0x00, 0x00, 0x00, 0x06                 -- length = 6
-           , 0x73, 0x65, 0x74, 0x42, 0x61, 0x72     -- 'setBar'
+          ([ 0x80, 0x01, 0x00
            , 0x02                                   -- type = Reply
+           , 0x00, 0x00, 0x00, 0x06                 -- length = 6
+           , 0x73, 0x65, 0x74, 0x42, 0x61, 0x72     -- 'setBar'
            , 0x00, 0x00, 0x00, 0x01                 -- seqId = 1
            , 0x00
            ], Message "setBar" Reply 1 (vstruct []))
@@ -310,4 +311,13 @@ spec = describe "BinaryProtocol" $ do
 
            , 0x00
            ], Message "setBar" Oneway 1 (vstruct []))
+        ]
+    it "it can read non-strict messages" $ readMessageCases
+        [ ([ 0x80, 0x01 -- version = 1
+          , 0x00, 0x02 -- type = REPLY
+          , 0x00, 0x00, 0x00, 0x06 -- length = 6
+          , 0x70, 0x75, 0x74, 0x41, 0x6c, 0x6c -- 'putAll'
+          , 0x00, 0x00, 0x00, 0x00 --seq id = 0
+          , 0x00
+          ], Message "putAll" Reply 0 (vstruct []))
         ]

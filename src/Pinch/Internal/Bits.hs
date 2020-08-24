@@ -16,6 +16,8 @@ module Pinch.Internal.Bits
     , w64ShiftL
     ) where
 
+import Prelude
+
 #if defined(__GLASGOW_HASKELL__) && !defined(__HADDOCK__)
 import GHC.Base (Int (..), uncheckedShiftL#)
 import GHC.Word (Word16 (..), Word32 (..), Word64 (..), uncheckedShiftL64#)

@@ -25,7 +25,10 @@ module Pinch.Internal.Builder
     , doubleBE
     , doubleLE
     , byteString
+    , getSize
     ) where
+
+import Prelude
 
 import Data.ByteString              (ByteString)
 import Data.ByteString.Builder.Prim ((>*<))
@@ -41,6 +44,10 @@ import qualified Data.ByteString.Internal              as BI
 
 -- | A ByteString Builder that knows its final size.
 data Builder = B {-# UNPACK #-} !Int (Ptr Word8 -> IO ())
+
+
+getSize :: Builder -> Int
+getSize (B sz _) = sz
 
 -- | Build a ByteString from the given ByteString builder.
 runBuilder :: Builder -> ByteString

@@ -23,6 +23,8 @@ module Pinch.Internal.Value
     , valueTType
     ) where
 
+import Prelude
+
 #if __GLASGOW_HASKELL__ < 709
 import Data.Monoid (mempty)
 #endif

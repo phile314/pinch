@@ -26,10 +26,13 @@ module Pinch.Internal.Parser
     , double
     , doubleLE
     , take
+    , getDoublebe
+    , getDoublele
     ) where
 
 import Control.Applicative
 import Control.Monad
+import qualified Control.Monad.Fail as Fail
 
 import Control.Monad.ST (ST)
 import Data.Bits        ((.|.))
@@ -37,6 +40,7 @@ import Data.ByteString  (ByteString)
 import Data.Int         (Int16, Int32, Int64, Int8)
 import Data.Word        (Word8)
 import Prelude          hiding (take)
+import Data.Serialize.Get
 
 import qualified Control.Monad.ST       as ST
 import qualified Data.Array.ST          as A
@@ -87,14 +91,17 @@ instance Monad Parser where
     {-# INLINE (>>) #-}
     (>>) = (*>)
 
-    {-# INLINE fail #-}
-    fail msg = Parser $ \_ kFail _ -> kFail msg
-
     {-# INLINE (>>=) #-}
     Parser m >>= k = Parser
         $ \b0 kFail kSucc -> m b0 kFail
         $ \b1 a -> unParser (k a) b1 kFail kSucc
 
+    -- backwards compatibility
+    fail = Fail.fail
+
+instance Fail.MonadFail Parser where
+    {-# INLINE fail #-}
+    fail msg = Parser $ \_ kFail _ -> kFail msg
 
 -- | Run the parser on the given ByteString. Return either the failure message
 -- or the result.
@@ -207,6 +214,14 @@ doubleLE :: Parser Double
 doubleLE = int64LE >>= \i -> return (ST.runST (cast i))
 {-# INLINE doubleLE #-}
 
+
+getDoublebe :: Get Double
+getDoublebe = getInt64be >>= \i -> return (ST.runST (cast i))
+{-# INLINE getDoublebe #-}
+
+getDoublele :: Get Double
+getDoublele = getInt64le >>= \i -> return (ST.runST (cast i))
+{-# INLINE getDoublele #-}
 
 cast :: (A.MArray (A.STUArray s) a (ST s),
          A.MArray (A.STUArray s) b (ST s)) => a -> ST s b
