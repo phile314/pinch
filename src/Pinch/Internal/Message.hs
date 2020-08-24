@@ -24,7 +24,9 @@ import Prelude
 import Control.DeepSeq (NFData)
 import Data.Data       (Data)
 import Data.Int        (Int32)
+import Data.String     (IsString(..))
 import Data.Text       (Text)
+import qualified Data.Text as T
 import Data.Typeable   (Typeable)
 import Data.Hashable
 import GHC.Generics    (Generic)
@@ -34,6 +36,9 @@ import Pinch.Internal.Value (Value)
 
 newtype EndpointName = EndpointName Text
   deriving (Typeable, Eq, Hashable)
+
+instance IsString EndpointName where
+  fromString = EndpointName . T.pack
 
 -- | Type of message being sent.
 data MessageType
