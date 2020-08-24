@@ -18,36 +18,43 @@ import Pinch.Internal.Builder as B
 
 import System.IO
 
+class Connection c where
+  cGet :: c -> Int -> IO BS.ByteString
+  cGetSome :: c -> Int -> IO BS.ByteString
+  cPut :: c -> BS.ByteString -> IO ()
+
 data Transport
   = Transport
   { writeMessage :: Builder -> IO ()
   , readMessage  :: forall a . Get a -> IO (Either String a)
   }
 
+instance Connection Handle where
+  cPut = BS.hPut
+  cGet = BS.hGet
+  cGetSome = BS.hGetSome
 
-
-framedTransport :: Handle -> IO Transport
-framedTransport h = pure $ Transport writeMsg readMsg where
+framedTransport :: Connection c => c -> IO Transport
+framedTransport c = pure $ Transport writeMsg readMsg where
   writeMsg msg = do
-    BS.hPut h $ runBuilder $ int32BE (fromIntegral $ getSize msg)
-    BS.hPut h $ runBuilder msg
+    cPut c $ runBuilder $ int32BE (fromIntegral $ getSize msg)
+    cPut c $ runBuilder msg
 
   readMsg p = do
-    szBs <- hGetExactly h 4
+    szBs <- cGetExactly c 4
     let sz = fromIntegral <$> runGet getInt32be szBs
     case sz of
       Right x -> do
-        msgBs <- hGetExactly h x
+        msgBs <- cGetExactly c x
         pure $ runGet p msgBs
       Left s -> pure $ Left "Invalid frame size"
 
-
-unframedTransport :: Handle -> IO Transport
-unframedTransport h = do
+unframedTransport :: Connection c => c -> IO Transport
+unframedTransport c = do
   readBuffer <- newIORef mempty
   pure $ Transport writeMsg (readMsg readBuffer)
   where
-    writeMsg msg = BS.hPut h $ runBuilder msg
+    writeMsg msg = cPut c $ runBuilder msg
 
     readMsg buf p = do
       bs <- readIORef buf
@@ -55,13 +62,13 @@ unframedTransport h = do
       (leftOvers, r) <- runGetWith getSome p bs'
       writeIORef buf leftOvers
       pure r
-    getSome = BS.hGetSome h 1024
+    getSome = cGetSome c 1024
 
-hGetExactly :: Handle -> Int -> IO BS.ByteString
-hGetExactly h n = do
-  bs <- BS.hGet h n
+cGetExactly :: Connection c => c -> Int -> IO BS.ByteString
+cGetExactly c n = do
+  bs <- cGet c n
   if BS.length bs < n then
-    (bs <>) <$> hGetExactly h (n - BS.length bs)
+    (bs <>) <$> cGetExactly c (n - BS.length bs)
   else
     pure bs
 
