@@ -4,6 +4,7 @@ module Pinch.Transport
   ( Transport(..)
   , framedTransport
   , unframedTransport
+  , Connection(..)
   )where
 
 import Prelude
