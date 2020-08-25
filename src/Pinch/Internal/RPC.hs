@@ -31,12 +31,13 @@ class (Pinchable a, Tag a ~ TStruct) => ThriftResult a where
   type ResultType a
   toEither :: a -> Either SomeException (ResultType a)
   wrapException :: SomeException -> Maybe a
+  success :: ResultType a -> a
 
 instance ThriftResult Unit where
   type ResultType Unit = ()
   toEither Unit = Right ()
-
   wrapException _ = Nothing
+  success () = Unit
 
 data Wrapper a = forall e . Exception e => Wrapper (e -> a)
 
