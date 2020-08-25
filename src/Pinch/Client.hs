@@ -23,6 +23,7 @@ import Pinch.Internal.Exception
 import Pinch.Internal.Pinchable
 import Pinch.Internal.Builder
 import Pinch.Internal.Message
+import Pinch.Internal.RPC
 import Pinch.Transport
 import Pinch.Protocol
 import qualified Data.Text as T
@@ -73,14 +74,6 @@ callOrThrow client c = do
 
 simpleClient :: Transport -> Protocol -> Multiplex -> Client
 simpleClient t p plex = Client t t p p plex
-
-class (Pinchable a, Tag a ~ TStruct) => ThriftResult a where
-  type ResultType a
-  toEither :: a -> Either SomeException (ResultType a)
-
-instance ThriftResult Unit where
-  type ResultType Unit = ()
-  toEither Unit = Right ()
 
 mux :: Multiplex -> Message -> Message
 mux m msg = case m of

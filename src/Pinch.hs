@@ -168,6 +168,7 @@ import Pinch.Internal.Exception
 import Pinch.Internal.Generic
 import Pinch.Internal.Message
 import Pinch.Internal.Pinchable
+import Pinch.Internal.RPC
 import Pinch.Internal.TType
 import Pinch.Internal.Value
 import Pinch.Protocol

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 88341d378a067a6eec7e07a11fc519ba05d5b45cee5437648d525aa93fd582a1
+-- hash: 96b3d668f0c653bf0d1c4d59b440392d2452f7a8485c5fc2c97cd5f903e17665
 
 name:           pinch
 version:        0.3.4.1
@@ -55,17 +55,18 @@ library
       Pinch.Internal.Message
       Pinch.Internal.Parser
       Pinch.Internal.Pinchable
+      Pinch.Internal.RPC
       Pinch.Internal.TType
       Pinch.Internal.Value
       Pinch.Protocol
       Pinch.Protocol.Binary
       Pinch.Protocol.Compact
       Pinch.Client
+      Pinch.Server
       Pinch.Transport
   other-modules:
       Pinch.Internal.Bits
       Pinch.Internal.Pinchable.Parser
-      Pinch.Server
       Paths_pinch
   hs-source-dirs:
       src

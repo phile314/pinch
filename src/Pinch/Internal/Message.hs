@@ -16,7 +16,6 @@
 module Pinch.Internal.Message
     ( Message(..)
     , MessageType(..)
-    , EndpointName(..)
     ) where
 
 import Prelude
@@ -33,12 +32,6 @@ import GHC.Generics    (Generic)
 
 import Pinch.Internal.TType (TStruct)
 import Pinch.Internal.Value (Value)
-
-newtype EndpointName = EndpointName Text
-  deriving (Typeable, Eq, Hashable)
-
-instance IsString EndpointName where
-  fromString = EndpointName . T.pack
 
 -- | Type of message being sent.
 data MessageType
