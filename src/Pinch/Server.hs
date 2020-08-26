@@ -21,6 +21,8 @@ module Pinch.Server
 
   , runServiceMethod
   , unknownMethodError
+
+  , msgAppEx
   ) where
 
 import Prelude
@@ -97,7 +99,7 @@ multiplexer endpoints = ThriftServer $ \ctx msg -> do
   let prefix' = EndpointName prefix
   let ctx' = addToContext prefix' ctx
   case prefix' `HM.lookup` endpMap of
-    _ | T.null rem -> pure $ msgAppEx msg $ ApplicationException "Invalid method name, expecting a ':'." WrongMethodName
+    _ | T.null rem -> pure $ msgAppEx msg $ ApplicationException "Invalid method name, expecting a dot." WrongMethodName
     Just srv -> do
       reply <- try $ unThriftServer srv ctx' $ msg { messageName = T.tail rem }
       case reply of
