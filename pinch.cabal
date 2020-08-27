@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 96b3d668f0c653bf0d1c4d59b440392d2452f7a8485c5fc2c97cd5f903e17665
+-- hash: e55c88372477425bec3cce622a54163974fa47b98ca23ad5410ddd11411e56e7
 
 name:           pinch
 version:        0.3.4.1
@@ -82,6 +82,7 @@ library
     , deepseq >=1.3 && <1.5
     , ghc-prim
     , hashable >=1.2 && <1.4
+    , network
     , semigroups >=0.18 && <0.19
     , text >=1.2 && <1.3
     , unordered-containers >=0.2 && <0.3
@@ -118,6 +119,7 @@ test-suite pinch-spec
     , cereal
     , containers >=0.5 && <0.7
     , hspec >=2.0
+    , network
     , pinch
     , semigroups >=0.18 && <0.19
     , text >=1.2 && <1.3

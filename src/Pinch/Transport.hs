@@ -5,6 +5,7 @@ module Pinch.Transport
   , framedTransport
   , unframedTransport
   , Connection(..)
+  , ReadResult(..)
   )where
 
 import Prelude
@@ -17,22 +18,46 @@ import Data.IORef
 import Data.Serialize.Get
 import Pinch.Internal.Builder as B
 
+import Network.Socket (Socket)
+import Network.Socket.ByteString
+
 import System.IO
 
 class Connection c where
-  cGet :: c -> Int -> IO BS.ByteString
+  -- Gets up to n bytes. Returns an empty bytestring if EOF is reached.
   cGetSome :: c -> Int -> IO BS.ByteString
+  -- Gets exactly n bytes. Returns an empty bytestring if EOF is reached.
+  cGetExactly :: c -> Int -> IO BS.ByteString
+  cGetExactly c n = B.runBuilder <$> go n mempty
+    where
+      go :: Int -> B.Builder -> IO B.Builder
+      go n b = do
+        bs <- cGetSome c n
+        let b' = b <> B.byteString bs
+        case BS.length bs of
+          -- EOF, return what data we might have gotten so far
+          0 -> pure b
+          n' | n' < n -> go (n - n') b'
+          _  | otherwise -> pure b'
   cPut :: c -> BS.ByteString -> IO ()
 
 instance Connection Handle where
   cPut = BS.hPut
-  cGet = BS.hGet
   cGetSome = BS.hGetSome
+
+instance Connection Socket where
+  cPut = sendAll
+  cGetSome s n = recv s (min n 4096)
+
+data ReadResult a
+  = RRSuccess a
+  | RRFailure String
+  | RREOF
 
 data Transport
   = Transport
   { writeMessage :: Builder -> IO ()
-  , readMessage  :: forall a . Get a -> IO (Either String a)
+  , readMessage  :: forall a . Get a -> IO (ReadResult a)
   }
 
 framedTransport :: Connection c => c -> IO Transport
@@ -47,8 +72,13 @@ framedTransport c = pure $ Transport writeMsg readMsg where
     case sz of
       Right x -> do
         msgBs <- cGetExactly c x
-        pure $ runGet p msgBs
-      Left s -> pure $ Left "Invalid frame size"
+        if BS.length msgBs < x
+          then
+            -- less data has been returned than expected. This means we have reached EOF.
+            pure $ RREOF
+          else
+            pure $ either RRFailure RRSuccess $ runGet p msgBs
+      Left s -> pure $ RRFailure "Invalid frame size"
 
 unframedTransport :: Connection c => c -> IO Transport
 unframedTransport c = do
@@ -62,27 +92,22 @@ unframedTransport c = do
       bs' <- if BS.null bs then getSome else pure bs
       (leftOvers, r) <- runGetWith getSome p bs'
       writeIORef buf leftOvers
-      pure r
+      pure $ r
     getSome = cGetSome c 1024
 
-cGetExactly :: Connection c => c -> Int -> IO BS.ByteString
-cGetExactly c n = do
-  bs <- cGet c n
-  if BS.length bs < n then
-    (bs <>) <$> cGetExactly c (n - BS.length bs)
-  else
-    pure bs
-
-runGetWith :: IO BS.ByteString -> Get a -> BS.ByteString -> IO (BS.ByteString, Either String a)
+runGetWith :: IO BS.ByteString -> Get a -> BS.ByteString -> IO (BS.ByteString, ReadResult a)
 runGetWith getBs p init = go (runGetPartial p init)
   where
     go r = case r of
       Fail err bs -> do
-        putStrLn "Fail"
-        pure (bs, Left err)
+        pure (bs, RRFailure err)
       Done r bs -> do
-        putStrLn "Done"
-        pure (bs, Right r)
+        pure (bs, RRSuccess r)
       Partial cont -> do
-        putStrLn "Partial"
-        getBs >>= go . cont
+        bs <- getBs
+        if BS.null bs
+          then
+            -- EOF
+            pure (bs, RREOF)
+          else
+            go $ cont bs

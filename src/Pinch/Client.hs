@@ -52,8 +52,9 @@ call (Client tIn tOut pIn pOut plex) c = do
   writeMessage tOut $ serializeMessage pOut $ mux plex (request c)
   reply <- readMessage tIn $ deserializeMessage' pIn
   case reply of
-    Left err -> throwIO $ ThriftError $ "Could not read message: " <> T.pack err
-    Right reply -> case messageType reply of
+    RREOF -> throwIO $ ThriftError $ "Reached EOF while awaiting reply"
+    RRFailure err -> throwIO $ ThriftError $ "Could not read message: " <> T.pack err
+    RRSuccess reply -> case messageType reply of
       Reply -> case runParser $ unpinch $ messagePayload reply of
         Right x -> pure x
         Left err -> do

@@ -131,19 +131,24 @@ threadedServer accept init close srv = forever $ do
   forkFinally (init h >>= \(ctx, chan) -> runConnection ctx srv chan) (\_ -> close h)
 
 runConnection :: Context -> ThriftServer -> Channel -> IO ()
-runConnection ctx srv chan = forever $ do
+runConnection ctx srv chan = do
   msg <- readMessage (cTransportIn chan) $ deserializeMessage' (cProtocolIn chan)
-  reply <- case msg of
-    Left err -> throwIO $ InvalidDataError $ T.pack err
-    Right call ->  case messageType call of
-      Call -> do
-        r <- try $ unThriftServer srv ctx call
-        case r of
-          Left (e :: SomeException) -> pure $ msgAppEx call $
-            ApplicationException ("Could not process request: " <> (T.pack $ show e)) InternalError
-          Right x -> pure x
-      t -> pure $ msgAppEx call $ ApplicationException ("Expected call, got " <> (T.pack $ show t)) InvalidMessageType
-  writeMessage (cTransportOut chan) $ serializeMessage (cProtocolOut chan) reply
+  case msg of
+    RREOF -> pure ()
+    RRFailure err -> do
+      throwIO $ InvalidDataError $ T.pack err
+    RRSuccess call -> do
+      reply <- case messageType call of
+        Call -> do
+          r <- try $ unThriftServer srv ctx call
+          case r of
+            Left (e :: SomeException) -> pure $ msgAppEx call $
+              ApplicationException ("Could not process request: " <> (T.pack $ show e)) InternalError
+            Right x -> pure x
+        t -> pure $ msgAppEx call $ ApplicationException ("Expected call, got " <> (T.pack $ show t)) InvalidMessageType
+      writeMessage (cTransportOut chan) $ serializeMessage (cProtocolOut chan) reply
+      runConnection ctx srv chan
+  where
 
 tryOrWrap :: ThriftResult a => IO a -> IO a
 tryOrWrap m = do
