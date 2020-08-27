@@ -68,17 +68,21 @@ framedTransport c = pure $ Transport writeMsg readMsg where
 
   readMsg p = do
     szBs <- cGetExactly c 4
-    let sz = fromIntegral <$> runGet getInt32be szBs
-    case sz of
-      Right x -> do
-        msgBs <- cGetExactly c x
-        if BS.length msgBs < x
-          then
-            -- less data has been returned than expected. This means we have reached EOF.
-            pure $ RREOF
-          else
-            pure $ either RRFailure RRSuccess $ runGet p msgBs
-      Left s -> pure $ RRFailure "Invalid frame size"
+    if BS.length szBs < 4
+      then
+        pure $ RREOF
+      else do
+        let sz = fromIntegral <$> runGet getInt32be szBs
+        case sz of
+          Right x -> do
+            msgBs <- cGetExactly c x
+            if BS.length msgBs < x
+              then
+                -- less data has been returned than expected. This means we have reached EOF.
+                pure $ RREOF
+              else
+                pure $ either RRFailure RRSuccess $ runGet p msgBs
+          Left s -> pure $ RRFailure "Invalid frame size"
 
 unframedTransport :: Connection c => c -> IO Transport
 unframedTransport c = do
