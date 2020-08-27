@@ -9,6 +9,8 @@ module Pinch.Internal.RPC
   , Unit(..)
   ) where
 
+import Prelude
+
 import Data.Hashable   (Hashable)
 import Data.Text       (Text)
 import Control.Exception
