@@ -34,6 +34,7 @@ class (Pinchable a, Tag a ~ TStruct) => ThriftResult a where
   toEither :: a -> Either SomeException (ResultType a)
   wrapException :: SomeException -> Maybe a
   success :: ResultType a -> a
+  success = error "deprecated"
 
 instance ThriftResult Unit where
   type ResultType Unit = ()
